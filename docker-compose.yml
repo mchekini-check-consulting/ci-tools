@@ -15,8 +15,18 @@ services:
       - jenkins_data/:/var/jenkins_home
   sonar:
     container_name: sonar
-    image: sonarqube:7.8-community
+    image: sonarqube:community
     ports:
       - "11001:9000"
     volumes:
       - sonarqube_data:/opt/sonarqube/data
+  keycloak:
+    image: jboss/keycloak
+    container_name: keycloak
+    ports:
+      - "10000:8080"
+    environment:
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD=admin
+      - PROXY_ADDRESS_FORWARDING=true
+    user: root
