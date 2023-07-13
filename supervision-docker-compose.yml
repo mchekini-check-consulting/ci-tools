@@ -1,0 +1,55 @@
+version: '2'
+
+volumes:
+  esdata1:
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+    container_name: elastic
+    environment:
+      - node.name=es01
+      - bootstrap.memory_lock=true
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      nproc: 65535
+      memlock:
+        soft: -1
+        hard: -1
+    cap_add:
+      - ALL
+    privileged: true
+    volumes:
+      - esdata1:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+      - 9300:9300
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana-oss:7.10.1
+    container_name: kibana
+    links:
+      - elasticsearch:elasticsearch
+    environment:
+      SERVER_NAME: localhost
+      ELASTICSEARCH_URL: http://elasticsearch:9200/
+    ports:
+      - 5601:5601
+    ulimits:
+      nproc: 65535
+      memlock:
+        soft: -1
+        hard: -1
+    cap_add:
+      - ALL
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.10.1
+    container_name: logstash
+    links:
+      - elasticsearch:elasticsearch
+    ports:
+      - 5045:5045
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/config/logstash-sample.conf
+    entrypoint: ./bin/logstash -f /usr/share/logstash/config/logstash-sample.conf --path.data datadirectory
